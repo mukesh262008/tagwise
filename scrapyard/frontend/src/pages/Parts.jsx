@@ -19,6 +19,8 @@ export default function Parts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
+  const [editingPart, setEditingPart] = useState(null)
+  const [refresh, setRefresh] = useState(0)
   const dq = useDebounce(q)
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function Parts() {
     return () => {
       stale = true
     }
-  }, [dq, category, condition, inStock, page])
+  }, [dq, category, condition, inStock, page, refresh])
 
   const filter = (setter) => (e) => {
     setter(e.target.type === 'checkbox' ? e.target.checked : e.target.value)
@@ -97,6 +99,7 @@ export default function Parts() {
               <th className={th}>Condition</th>
               <th className={th}>Stock</th>
               <th className={th}>Location</th>
+              <th className={th}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -116,11 +119,16 @@ export default function Parts() {
                   <StockBadge quantity={p.quantity} />
                 </td>
                 <td className={td}>{p.location_note || '—'}</td>
+                <td className={td}>
+                  <Button variant="secondary" onClick={() => setEditingPart(p)}>
+                    Edit
+                  </Button>
+                </td>
               </tr>
             ))}
             {!loading && data.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-400">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
                   No parts found.
                 </td>
               </tr>
@@ -148,6 +156,16 @@ export default function Parts() {
 
       {adding && (
         <PartForm onClose={() => setAdding(false)} onSaved={(saved) => navigate(`/parts/${saved.id}`)} />
+      )}
+      {editingPart && (
+        <PartForm
+          part={editingPart}
+          onClose={() => setEditingPart(null)}
+          onSaved={() => {
+            setEditingPart(null)
+            setRefresh((current) => current + 1)
+          }}
+        />
       )}
     </>
   )
